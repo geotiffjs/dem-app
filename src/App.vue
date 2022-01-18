@@ -19,6 +19,7 @@ export default {
     return {
       variables: {
         visualization: 'shaded',
+        colorscale: 'jet',
         min: 360,
         max: 700,
         offset: 0,

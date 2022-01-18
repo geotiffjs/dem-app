@@ -5,23 +5,25 @@
   <option value="shaded">Shaded</option>
 </select>
 <div v-if="variables.visualization == 'relief'">
-  <label>Vertical Exaggeration</label><input type="range" min="1" max="5" v-model="variables.vert">
-  <input type="range" min="0" max="90" v-model="variables.sunEl">
-  <input type="range" min="0" max="360" v-model="variables.sunAz">
+  <label>Vertical Exaggeration</label><input v-model.number="variables.vert" type="range" min="1" max="5">
+  <input v-model.number="variables.sunEl" type="range" min="0" max="90">
+  <input v-model.number="variables.sunAz" type="range" min="0" max="360">
 </div>
 <div v-else-if="variables.visualization == 'contours'">
   <select v-model="variables.colorscale">
     <option v-for="colormap in availableColormaps" :key="colormap" :value="colormap">{{colormap}}</option>
   </select>
-  <input type="range" min="0" max="200" v-model="variables.offset">
-  <input type="range" min="0" max="500" v-model="variables.spacing">
+  <input v-model.number="variables.offset" type="range" min="0" max="200">
+  <input v-model.number="variables.spacing" type="range" min="0" max="500">
+  <input v-model.number="variables.min" type="range" min="0" max="8800">
+  <input v-model.number="variables.max" type="range" min="0" max="8800" step="10">
 </div>
 <div v-else-if="variables.visualization == 'shaded'">
   <select v-model="variables.colorscale">
     <option v-for="colormap in availableColormaps" :key="colormap" :value="colormap">{{colormap}}</option>
   </select>
-  <input type="range" min="0" max="200" v-model="variables.min">
-  <input type="range" min="0" max="500" step="10" v-model="variables.max">
+  <input v-model.number="variables.min" type="range" min="0" max="8800">
+  <input v-model.number="variables.max" type="range" min="0" max="8800" step="10">
 </div>
 </template>
 

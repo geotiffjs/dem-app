@@ -16,66 +16,7 @@ import GeoTIFF from 'ol/source/GeoTIFF';
 import WebGLTileLayer from 'ol/layer/WebGLTile';
 import colormap from 'colormap';
 
-
-const grey = ['band', 1];
-
-function normalize(value, min = 360, max = 700) {
-  return ['/', ['-', value, min], max - min];
-}
-
-function elevation(xOffset, yOffset) {
-  return ['band', 1, xOffset, yOffset];
-}
-
-// relief
-
-const dp = ['*', 2, ['resolution']];
-const z0x = ['*', ['var', 'vert'], elevation(-1, 0)];
-const z1x = ['*', ['var', 'vert'], elevation(1, 0)];
-const dzdx = ['/', ['-', z1x, z0x], dp];
-const z0y = ['*', ['var', 'vert'], elevation(0, -1)];
-const z1y = ['*', ['var', 'vert'], elevation(0, 1)];
-const dzdy = ['/', ['-', z1y, z0y], dp];
-const slope = ['atan', ['^', ['+', ['^', dzdx, 2], ['^', dzdy, 2]], 0.5]];
-const aspect = ['clamp', ['atan', ['-', 0, dzdx], dzdy], -Math.PI, Math.PI];
-const sunEl = ['*', Math.PI / 180, ['var', 'sunEl']];
-const sunAz = ['*', Math.PI / 180, ['var', 'sunAz']];
-
-const cosIncidence = [
-  '+',
-  ['*', ['sin', sunEl], ['cos', slope]],
-  ['*', ['*', ['cos', sunEl], ['sin', slope]], ['cos', ['-', sunAz, aspect]]],
-];
-
-function prepScale(name, min = 0, max = 1) {
-  const cmap = colormap({colormap: name, format: 'rgba'})
-  const diff = max - min;
-  const step = 1 / (cmap.length);
-  const out = [];
-  out.push(min);
-  out.push([0, 0, 0, 0]);
-  for (let i = 0; i < cmap.length; ++i) {
-    out.push((i * step * diff) + min);
-    out.push(cmap[i]);
-  }
-  out.push(max);
-  out.push([0, 0, 0, 0]);
-  return out;
-}
-
-
-function glfloor(n) {
-  return ['-', n, ['%', n, 1]];
-}
-
-function diff(a, b) {
-  return ['abs', ['-', a, b]];
-}
-
-function contspace(v) {
-  return glfloor(['/', ['+', v, ['var', 'offset']], ['var', 'spacing']]);
-}
-
+import { contours, relief, shaded } from "../expressions";
 
 
 export default {
@@ -98,6 +39,8 @@ export default {
         return {
           offset: this.variables.offset,
           spacing: this.variables.spacing,
+          min: this.variables.min,
+          max: this.variables.max,
         }
       }
       else if (this.variables.visualization == 'shaded') {
@@ -109,47 +52,15 @@ export default {
     },
     renderStyle() {
       if (this.variables.visualization == 'relief') {
-        return [
-          'color',
-          ['*', 255, cosIncidence],
-          ['*', 255, cosIncidence],
-          ['*', 255, cosIncidence],
-        ];
+        return relief('vert', 'sunEl', 'sunAz');
       }
       else if (this.variables.visualization == 'contours') {
-        return [
-          'interpolate',
-          ['linear'],
-          [
-            '*',
-            [
-              'clamp',
-              [
-                '+',
-                diff(
-                  contspace(['band', 1]),
-                  contspace(elevation(1, 0))
-                ),
-                diff(
-                  contspace(['band', 1]),
-                  contspace(elevation(0, 1))
-                ),
-              ],
-              0,
-              1,
-            ],
-            ['band', 1],
-          ],
-          ...prepScale(this.variables.colorscale, 360, 700)
-        ];
+        const cmap = colormap({ colormap: this.variables.colorscale, format: 'rgba', nshades: 16 });
+        return contours(cmap, 'offset', 'spacing', 'min', 'max');
       }
       else if (this.variables.visualization == 'shaded') {
-        return [
-          'interpolate',
-          ['linear'],
-          grey,
-          ...prepScale(this.variables.colorscale, 500, 600)
-        ];
+        const cmap = colormap({ colormap: this.variables.colorscale, format: 'rgba', nshades: 16 });
+        return shaded(cmap, 'min', 'max');
       }
     }
   },
@@ -163,6 +74,7 @@ export default {
       }
     },
     renderVariables(vars) {
+      console.log(vars);
       this.demLayer.updateStyleVariables(vars);
     }
   },
