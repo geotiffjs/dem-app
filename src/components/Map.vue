@@ -1,7 +1,5 @@
 <template>
-  <div id="app">
-    <div id="map" ref="map"></div>
-  </div>
+  <div id="map" ref="map"></div>
 </template>
 
 <script>
@@ -14,6 +12,7 @@ import {optionsFromCapabilities} from 'ol/source/WMTS';
 import WMTSCapabilities from 'ol/format/WMTSCapabilities';
 import GeoTIFF from 'ol/source/GeoTIFF';
 import WebGLTileLayer from 'ol/layer/WebGLTile';
+import {defaults as defaultControls} from 'ol/control';
 import colormap from 'colormap';
 
 import { contours, relief, shaded } from "../expressions";
@@ -22,6 +21,7 @@ import { contours, relief, shaded } from "../expressions";
 export default {
   props: {
     variables: Object,
+    tiffUrl: String,
   },
   async mounted() {
     await this.initiateMap();
@@ -67,41 +67,81 @@ export default {
   watch: {
     'variables.visualization'() {
       this.resetDemLayer();
+      // this.demLayer.setStyle(this.renderStyle);
+      // this.demLayer.updateStyleVariables(this.renderVariables);
     },
     'variables.colorscale'() {
       if (this.variables.visualization !== 'relief') {
         this.resetDemLayer();
+        // this.demLayer.setStyle(this.renderStyle);
+        // this.demLayer.updateStyleVariables(this.renderVariables);
       }
     },
     renderVariables(vars) {
-      console.log(vars);
       this.demLayer.updateStyleVariables(vars);
     }
   },
   methods: {
+    resetDemSource() {
+      this.demSource = new GeoTIFF({
+        normalize: false,
+        sources: [
+          {
+            url: this.tiffUrl,
+          },
+        ],
+      });
+      this.demSource.setAttributions('European Environment Agency (EAA)');
+      if (this.demLayer) {
+        this.demLayer.setSource(this.demSource);
+      }
+    },
+    resetDemLayer() {
+      if (this.demLayer) {
+        this.map.removeLayer(this.demLayer);
+      }
+      this.demLayer = new WebGLTileLayer({
+        source: this.source,
+        style: {
+          variables: this.renderVariables,
+          color: this.renderStyle,
+        },
+      });
+      this.map.addLayer(this.demLayer);
+    },
     async initiateMap() {
       const response = await fetch('https://tiles.maps.eox.at/wmts/1.0.0/WMTSCapabilities.xml')
-      const text = await response.text();
-      const parser = new WMTSCapabilities();
-      const options = optionsFromCapabilities(parser.read(text), {
-        layer: 's2cloudless-2019',
+      const capabilities = (new WMTSCapabilities()).read(await response.text())
+      const backgroundLayerName = 's2cloudless-2020';
+      const attribution = capabilities.Contents.Layer.filter(
+        l => l.Identifier === backgroundLayerName
+      )[0].Abstract;
+      const options = optionsFromCapabilities(capabilities, {
+        layer: backgroundLayerName,
         matrixSet: 'EPSG:4326',
       });
       const raster = new TileLayer({
-        source: new WMTS(options),
+        source: new WMTS({
+          attributions: attribution,
+          ...options
+        }),
       });
 
       this.source = new GeoTIFF({
         normalize: false,
         sources: [
           {
-            url: './src/assets/Copernicus_DSM_30_N03_00_E016_00_DEM.tif',
+            url: this.tiffUrl,
           },
         ],
       });
-
+      this.source.setAttributions('European Environment Agency (EAA)');
+      // const attribution = new Attribution({
+      //   collapsible: false,
+      // });
       this.map = new Map({
         target: this.$refs.map,
+        controls: defaultControls({attribution: true}),//.extend([attribution]),
         layers: [
           raster,
           // this.demLayer,
@@ -120,19 +160,6 @@ export default {
       this.map.getView().fit(view.extent);
       this.resetDemLayer();
     },
-    resetDemLayer() {
-      if (this.demLayer) {
-        this.map.removeLayer(this.demLayer);
-      }
-      this.demLayer = new WebGLTileLayer({
-        source: this.source,
-        style: {
-          variables: this.renderVariables,
-          color: this.renderStyle,
-        },
-      });
-      this.map.addLayer(this.demLayer);
-    }
   },
 };
 </script>
@@ -143,7 +170,7 @@ export default {
   margin: 0;
   padding: 0;
   /* height: 50%; */
-  height: 400px;
+  height: 100%;
   width: 100%;
 }
 /*#app {
