@@ -13,7 +13,8 @@ jobs:
           cache: 'yarn'
       - run: yarn install
       - run: yarn build
-      - run: cp src/assets/*.tif dist/assets
+      - run: mkdir -p dist/src/assets
+      - run: cp src/assets/*.tif dist/src/assets
       - name: Deploy 🚀
         uses: JamesIves/github-pages-deploy-action@v4.2.2
         with:
