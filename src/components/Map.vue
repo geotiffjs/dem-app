@@ -66,9 +66,9 @@ export default {
   },
   watch: {
     'variables.visualization'() {
-      this.resetDemLayer();
-      // this.demLayer.setStyle(this.renderStyle);
-      // this.demLayer.updateStyleVariables(this.renderVariables);
+      // this.resetDemLayer();
+      this.demLayer.setStyle(this.renderStyle);
+      this.demLayer.updateStyleVariables(this.renderVariables);
     },
     'variables.colorscale'() {
       if (this.variables.visualization !== 'relief') {
