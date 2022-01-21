@@ -34,12 +34,15 @@
   </div>
 </div>
 <div v-else-if="variables.visualization == 'contours'">
-  <label>
-    Colorscale
-    <select v-model="variables.colorscale">
-      <option v-for="colormap in availableColormaps" :key="colormap" :value="colormap">{{colormap}}</option>
-    </select>
-  </label>
+  <div class="input-row">
+    <label>
+      Colorscale
+      <select v-model="variables.colorscale">
+        <option v-for="colormap in availableColormaps" :key="colormap" :value="colormap">{{colormap}}</option>
+      </select>
+    </label>
+    <canvas v-if="variables.visualization !== 'relief'" ref="colormap-preview"></canvas>
+  </div>
   <div class="input-row">
     <label>
       Offset
@@ -70,12 +73,15 @@
   </div>
 </div>
 <div v-else-if="variables.visualization == 'shaded'">
-  <label>
-    Colorscale
-    <select v-model="variables.colorscale">
-      <option v-for="colormap in availableColormaps" :key="colormap" :value="colormap">{{colormap}}</option>
-    </select>
-  </label>
+  <div class="input-row">
+    <label>
+      Colorscale
+      <select v-model="variables.colorscale">
+        <option v-for="colormap in availableColormaps" :key="colormap" :value="colormap">{{colormap}}</option>
+      </select>
+    </label>
+    <canvas v-if="variables.visualization !== 'relief'" ref="colormap-preview"></canvas>
+  </div>
   <div class="input-row">
     <label>
       Elevation Minimum
@@ -94,6 +100,7 @@
 </template>
 
 <script>
+import colormap from 'colormap';
 import * as colormaps from 'colormap/colorScale.js'
 
 export default {
@@ -103,9 +110,36 @@ export default {
   },
   data() {
     return {
-      // visualization: "relief",
       availableColormaps: Object.keys(colormaps).sort(),
     }
+  },
+  mounted() {
+    this.renderColorscalePreview();
+  },
+  methods: {
+    renderColorscalePreview() {
+      const newColorscale = this.variables.colorscale;
+      const canvas = this.$refs['colormap-preview'];
+      const ctx = canvas.getContext('2d');
+      const nshades = 48;
+      const cmap = colormap({
+        colormap: newColorscale,
+        nshades,
+        format: 'rgbaString',
+      });
+      canvas.width = 480;
+      canvas.height = 40
+      for (let j = 0; j < nshades; j++) {
+        ctx.fillStyle = cmap[j];
+        ctx.fillRect(j*10, 0, 10, 40);
+      }
+
+    },
+  },
+  watch: {
+    'variables.colorscale'() {
+      this.renderColorscalePreview();
+    },
   }
 }
 </script>
