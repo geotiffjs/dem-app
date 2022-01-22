@@ -66,15 +66,17 @@ export default {
   },
   watch: {
     'variables.visualization'() {
-      // this.resetDemLayer();
-      this.demLayer.setStyle(this.renderStyle);
-      this.demLayer.updateStyleVariables(this.renderVariables);
+      this.demLayer.setStyle({
+        color: this.renderStyle,
+        variables: this.renderVariables,
+      });
     },
     'variables.colorscale'() {
       if (this.variables.visualization !== 'relief') {
-        this.resetDemLayer();
-        // this.demLayer.setStyle(this.renderStyle);
-        // this.demLayer.updateStyleVariables(this.renderVariables);
+        this.demLayer.setStyle({
+        color: this.renderStyle,
+        variables: this.renderVariables,
+      });
       }
     },
     renderVariables(vars) {
