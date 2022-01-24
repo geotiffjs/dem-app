@@ -1,13 +1,9 @@
 <template>
-  <div class="cell cell-map">
-    <Map :variables="variables" :tiffUrl="tiffUrl" />
-  </div>
-  <div class="cell cell-edit">
-    <DemControl :variables="variables" :tiffUrl="tiffUrl"></DemControl>
-  </div>
-  <div class="cell cell-inspect">
-    <div>{{ tiffUrl }}{{ variables }}</div>
-  </div>
+  <Map :variables="variables" :tiffUrl="tiffUrl">
+    <aside id="dem-control">
+      <DemControl :variables="variables" :tiffUrl="tiffUrl"></DemControl>
+    </aside>
+  </Map>
 </template>
 
 <script>
@@ -40,44 +36,47 @@ export default {
 </script>
 
 <style>
+@import "muicss/dist/css/mui.min.css";
+@import "//fonts.googleapis.com/css?family=Roboto:300,400,500,700";
+
+:root {
+  --primary-color: 0, 65, 112;
+}
+
 html,
-body {
-  height: 100%;
-  margin: 0;
-}
-
+body,
 #app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
   height: 100%;
-  display: grid;
-  grid-template-columns: 100vh;
-  grid-auto-rows: 1fr;
-  grid-gap: 1rem;
-  padding: 1rem;
-  box-sizing: border-box;
 }
 
-.cell {
-  border-radius: 4px;
-  background-color: lightgrey;
-  overflow: hidden;
-  padding: 1rem;
+body {
+  font-family: "Roboto", "Helvetica Neue", Helvetica, Arial;
 }
 
-.cell-map {
-  grid-column: 1;
-  grid-row-start: 1;
-  grid-row-end: 3;
-  padding: 0;
+#dem-control {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  z-index: 1;
 }
 
-.cell-edit {
-  grid-column: 2;
-  grid-row: 1;
+/* Primary Color Overrides */
+.mui-btn--primary {
+  background: rgb(var(--primary-color));
 }
-
-.cell-inspect {
-  grid-column: 2;
-  grid-row: 2;
+.mui-select:focus > select,
+.mui-select > select:focus,
+.mui-textfield > input:focus,
+.mui-textfield > textarea:focus {
+  border-color: rgb(var(--primary-color));
+}
+.mui-select:focus > label,
+.mui-select > select:focus~label,
+.mui-textfield > input:focus~label,
+.mui-textfield > textarea:focus~label {
+  color: rgb(var(--primary-color));
+}
+.mui-btn--primary:hover {
+  background: rgba(var(--primary-color), 0.9);
 }
 </style>

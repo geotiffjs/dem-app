@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "colormap": "^2.3.2",
+    "muicss": "^0.10.3",
     "ol": "^6.12.0",
     "vue": "^3.2.25"
   },
