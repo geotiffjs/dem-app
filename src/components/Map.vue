@@ -6,17 +6,16 @@
 import "ol/ol.css";
 import Map from "ol/Map";
 import View from "ol/View";
-import {Tile as TileLayer} from 'ol/layer';
-import {WMTS, Vector as VectorSource} from 'ol/source';
-import {optionsFromCapabilities} from 'ol/source/WMTS';
-import WMTSCapabilities from 'ol/format/WMTSCapabilities';
-import GeoTIFF from 'ol/source/GeoTIFF';
-import WebGLTileLayer from 'ol/layer/WebGLTile';
-import {defaults as defaultControls} from 'ol/control';
-import colormap from 'colormap';
+import { Tile as TileLayer } from "ol/layer";
+import { WMTS } from "ol/source";
+import { optionsFromCapabilities } from "ol/source/WMTS";
+import WMTSCapabilities from "ol/format/WMTSCapabilities";
+import GeoTIFF from "ol/source/GeoTIFF";
+import WebGLTileLayer from "ol/layer/WebGLTile";
+import { defaults as defaultControls } from "ol/control";
+import colormap from "colormap";
 
 import { contours, relief, shaded } from "../expressions";
-
 
 export default {
   props: {
@@ -28,60 +27,64 @@ export default {
   },
   computed: {
     renderVariables() {
-      if (this.variables.visualization == 'relief') {
+      if (this.variables.visualization == "relief") {
         return {
           vert: this.variables.vert,
           sunEl: this.variables.sunEl,
           sunAz: this.variables.sunAz,
-        }
-      }
-      else if (this.variables.visualization == 'contours') {
+        };
+      } else if (this.variables.visualization == "contours") {
         return {
           offset: this.variables.offset,
           spacing: this.variables.spacing,
           min: this.variables.min,
           max: this.variables.max,
-        }
-      }
-      else if (this.variables.visualization == 'shaded') {
+        };
+      } else if (this.variables.visualization == "shaded") {
         return {
           min: this.variables.min,
           max: this.variables.max,
-        }
+        };
       }
     },
     renderStyle() {
-      if (this.variables.visualization == 'relief') {
-        return relief('vert', 'sunEl', 'sunAz');
+      if (this.variables.visualization == "relief") {
+        return relief("vert", "sunEl", "sunAz");
+      } else if (this.variables.visualization == "contours") {
+        const cmap = colormap({
+          colormap: this.variables.colorscale,
+          format: "rgba",
+          nshades: 16,
+        });
+        return contours(cmap, "offset", "spacing", "min", "max");
+      } else if (this.variables.visualization == "shaded") {
+        const cmap = colormap({
+          colormap: this.variables.colorscale,
+          format: "rgba",
+          nshades: 16,
+        });
+        return shaded(cmap, "min", "max");
       }
-      else if (this.variables.visualization == 'contours') {
-        const cmap = colormap({ colormap: this.variables.colorscale, format: 'rgba', nshades: 16 });
-        return contours(cmap, 'offset', 'spacing', 'min', 'max');
-      }
-      else if (this.variables.visualization == 'shaded') {
-        const cmap = colormap({ colormap: this.variables.colorscale, format: 'rgba', nshades: 16 });
-        return shaded(cmap, 'min', 'max');
-      }
-    }
+    },
   },
   watch: {
-    'variables.visualization'() {
+    "variables.visualization"() {
       this.demLayer.setStyle({
         color: this.renderStyle,
         variables: this.renderVariables,
       });
     },
-    'variables.colorscale'() {
-      if (this.variables.visualization !== 'relief') {
+    "variables.colorscale"() {
+      if (this.variables.visualization !== "relief") {
         this.demLayer.setStyle({
-        color: this.renderStyle,
-        variables: this.renderVariables,
-      });
+          color: this.renderStyle,
+          variables: this.renderVariables,
+        });
       }
     },
     renderVariables(vars) {
       this.demLayer.updateStyleVariables(vars);
-    }
+    },
   },
   methods: {
     resetDemSource() {
@@ -93,7 +96,7 @@ export default {
           },
         ],
       });
-      this.demSource.setAttributions('European Environment Agency (EAA)');
+      this.demSource.setAttributions("European Environment Agency (EAA)");
       if (this.demLayer) {
         this.demLayer.setSource(this.demSource);
       }
@@ -112,20 +115,22 @@ export default {
       this.map.addLayer(this.demLayer);
     },
     async initiateMap() {
-      const response = await fetch('https://tiles.maps.eox.at/wmts/1.0.0/WMTSCapabilities.xml')
-      const capabilities = (new WMTSCapabilities()).read(await response.text())
-      const backgroundLayerName = 's2cloudless-2020';
+      const response = await fetch(
+        "https://tiles.maps.eox.at/wmts/1.0.0/WMTSCapabilities.xml"
+      );
+      const capabilities = new WMTSCapabilities().read(await response.text());
+      const backgroundLayerName = "s2cloudless-2020";
       const attribution = capabilities.Contents.Layer.filter(
-        l => l.Identifier === backgroundLayerName
+        (l) => l.Identifier === backgroundLayerName
       )[0].Abstract;
       const options = optionsFromCapabilities(capabilities, {
         layer: backgroundLayerName,
-        matrixSet: 'EPSG:4326',
+        matrixSet: "EPSG:4326",
       });
       const raster = new TileLayer({
         source: new WMTS({
           attributions: attribution,
-          ...options
+          ...options,
         }),
       });
 
@@ -137,13 +142,13 @@ export default {
           },
         ],
       });
-      this.source.setAttributions('European Environment Agency (EAA)');
+      this.source.setAttributions("European Environment Agency (EAA)");
       // const attribution = new Attribution({
       //   collapsible: false,
       // });
       this.map = new Map({
         target: this.$refs.map,
-        controls: defaultControls({attribution: true}),//.extend([attribution]),
+        controls: defaultControls({ attribution: true }), //.extend([attribution]),
         layers: [
           raster,
           // this.demLayer,
