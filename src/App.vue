@@ -1,31 +1,31 @@
 <template>
   <div class="cell cell-map">
-    <Map :variables="variables" :tiffUrl="tiffUrl"/>
+    <Map :variables="variables" :tiffUrl="tiffUrl" />
   </div>
   <div class="cell cell-edit">
     <DemControl :variables="variables" :tiffUrl="tiffUrl"></DemControl>
   </div>
   <div class="cell cell-inspect">
-    <div>{{tiffUrl}}{{variables}}</div>
+    <div>{{ tiffUrl }}{{ variables }}</div>
   </div>
 </template>
 
 <script>
-import Map from './components/Map.vue'
-import DemControl from './components/DemControl.vue'
+import Map from "./components/Map.vue";
+import DemControl from "./components/DemControl.vue";
 
 export default {
-  name: 'App',
+  name: "App",
   components: {
     Map,
-    DemControl
+    DemControl,
   },
   data() {
     return {
-      tiffUrl: './src/assets/Copernicus_DSM_30_N03_00_E016_00_DEM.tif',
+      tiffUrl: "./src/assets/Copernicus_DSM_30_N03_00_E016_00_DEM.tif",
       variables: {
-        visualization: 'shaded',
-        colorscale: 'jet',
+        visualization: "shaded",
+        colorscale: "jet",
         min: 360,
         max: 700,
         offset: 0,
@@ -33,14 +33,15 @@ export default {
         vert: 1,
         sunEl: 45,
         sunAz: 45,
-      }
+      },
     };
-  }
-}
+  },
+};
 </script>
 
 <style>
-html, body {
+html,
+body {
   height: 100%;
   margin: 0;
 }
