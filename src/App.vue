@@ -1,7 +1,33 @@
 <template>
   <Map :variables="variables" :tiffUrl="tiffUrl">
     <aside id="dem-control">
-      <DemControl :variables="variables" :tiffUrl="tiffUrl"></DemControl>
+      <div class="ol-control" style="top: 0; right: 0">
+        <button
+          v-if="!showControls"
+          id="expand-control"
+          class="mui-btn mui-btn--primary"
+          @click="showControls = true"
+        >
+          <svg style="width:24px;height:24px" viewBox="0 0 24 24">
+            <path fill="currentColor" d="M3,17V19H9V17H3M3,5V7H13V5H3M13,21V19H21V17H13V15H11V21H13M7,9V11H3V13H7V15H9V9H7M21,13V11H11V13H21M15,9H17V7H21V5H17V3H15V9Z" />
+          </svg>
+        </button>
+      </div>
+      <DemControl
+        v-if="showControls"
+        :variables="variables"
+        :tiffUrl="tiffUrl"
+      ></DemControl>
+      <button
+        v-if="showControls"
+        id="contract-control"
+        class="mui-btn"
+        @click="showControls = false"
+      >
+        <svg style="width:24px;height:24px" viewBox="0 0 24 24">
+          <path fill="currentColor" d="M20,14H4V10H20" />
+        </svg>
+      </button>
     </aside>
   </Map>
 </template>
@@ -30,6 +56,7 @@ export default {
         sunEl: 45,
         sunAz: 45,
       },
+      showControls: window.innerWidth > 700,
     };
   },
 };
@@ -55,9 +82,31 @@ body {
 
 #dem-control {
   position: absolute;
-  top: 15px;
-  right: 15px;
+  top: .5em;
+  right: .5em;
   z-index: 1;
+}
+
+#expand-control {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 50px;
+  height: 50px;
+}
+
+#contract-control {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  top: 0;
+  right: 0;
+  margin: 0;
+  padding: 20px;
+  height: 50px;
+}
+#contract-control:hover {
+  box-shadow: none;
 }
 
 /* Primary Color Overrides */
@@ -78,5 +127,12 @@ body {
 }
 .mui-btn--primary:hover {
   background: rgba(var(--primary-color), 0.9);
+}
+
+.ol-control > button {
+  background: rgba(var(--primary-color), 0.9);
+}
+.ol-control > button:hover {
+  background: rgb(var(--primary-color));
 }
 </style>

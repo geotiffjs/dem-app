@@ -139,5 +139,6 @@ export default {
   background: white;
   border-radius: 5px;
   width: 400px;
+  max-width: 80vw;
 }
 </style>
