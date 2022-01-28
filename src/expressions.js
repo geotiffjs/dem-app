@@ -35,7 +35,7 @@ function contspace(v, varOffset, varSpacing) {
   return floor(['/', ['+', v, ['var', varOffset]], ['var', varSpacing]]);
 }
 
-export function contours(colorramp, varOffset = 'offset', varSpacing = 'spacing', varMin = 'min', varMax = 'max') {
+export function contours(colorramp, nodata, varOffset = 'offset', varSpacing = 'spacing', varMin = 'min', varMax = 'max') {
   return [
     'interpolate',
     ['linear'],
@@ -63,13 +63,14 @@ export function contours(colorramp, varOffset = 'offset', varSpacing = 'spacing'
   ];
 }
 
-export function relief(varVerticalExaggeration = 'vert', varSunElevation = 'sunEl', varSunAzimuth = 'sunAz') {
+export function relief(nodata, varVerticalExaggeration = 'vert', varSunElevation = 'sunEl', varSunAzimuth = 'sunAz') {
+  const verticalExaggeration = ['*', 0.00003, ['var', varVerticalExaggeration]];
   const dp = ['*', 2, ['resolution']];
-  const z0x = ['*', ['var', varVerticalExaggeration], elevation(-1, 0)];
-  const z1x = ['*', ['var', varVerticalExaggeration], elevation(1, 0)];
+  const z0x = ['*', verticalExaggeration, elevation(-1, 0)];
+  const z1x = ['*', verticalExaggeration, elevation(1, 0)];
   const dzdx = ['/', ['-', z1x, z0x], dp];
-  const z0y = ['*', ['var', varVerticalExaggeration], elevation(0, -1)];
-  const z1y = ['*', ['var', varVerticalExaggeration], elevation(0, 1)];
+  const z0y = ['*', verticalExaggeration, elevation(0, -1)];
+  const z1y = ['*', verticalExaggeration, elevation(0, 1)];
   const dzdy = ['/', ['-', z1y, z0y], dp];
   const slope = ['atan', ['^', ['+', ['^', dzdx, 2], ['^', dzdy, 2]], 0.5]];
   const aspect = ['clamp', ['atan', ['-', 0, dzdx], dzdy], -Math.PI, Math.PI];
@@ -81,17 +82,16 @@ export function relief(varVerticalExaggeration = 'vert', varSunElevation = 'sunE
     ['*', ['sin', sunEl], ['cos', slope]],
     ['*', ['*', ['cos', sunEl], ['sin', slope]], ['cos', ['-', sunAz, aspect]]],
   ];
-
   return [
     'color',
     ['*', 255, cosIncidence],
     ['*', 255, cosIncidence],
     ['*', 255, cosIncidence],
-    // TODO: nodata to transparent
+    ['match', grey, 0, 0, 1],
   ];
 }
 
-export function shaded(colorramp, varMin = 'min', varMax = 'max') {
+export function shaded(colorramp, nodata, varMin = 'min', varMax = 'max') {
   return [
     'interpolate',
     ['linear'],

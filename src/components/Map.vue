@@ -51,21 +51,21 @@ export default {
     },
     renderStyle() {
       if (this.variables.visualization == "relief") {
-        return relief("vert", "sunEl", "sunAz");
+        return relief(-9999, "vert", "sunEl", "sunAz");
       } else if (this.variables.visualization == "contours") {
         const cmap = colormap({
           colormap: this.variables.colorscale,
           format: "rgba",
           nshades: 16,
         });
-        return contours(cmap, "offset", "spacing", "min", "max");
+        return contours(cmap, -9999, "offset", "spacing", "min", "max");
       } else if (this.variables.visualization == "shaded") {
         const cmap = colormap({
           colormap: this.variables.colorscale,
           format: "rgba",
           nshades: 16,
-        });
-        return shaded(cmap, "min", "max");
+        },);
+        return shaded(cmap, -9999, "min", "max");
       }
     },
   },
@@ -95,6 +95,7 @@ export default {
         sources: [
           {
             url: this.tiffUrl,
+            nodata: -9999,
           },
         ],
       });
@@ -141,6 +142,7 @@ export default {
         sources: [
           {
             url: this.tiffUrl,
+            nodata: -9999,
           },
         ],
       });
