@@ -71,6 +71,7 @@ export default {
   },
   watch: {
     "variables.visualization"() {
+      this.demLayer.styleVariables_ = this.renderVariables;  // TODO: delete shim once OL supports this
       this.demLayer.setStyle({
         color: this.renderStyle,
         variables: this.renderVariables,
@@ -78,6 +79,7 @@ export default {
     },
     "variables.colorscale"() {
       if (this.variables.visualization !== "relief") {
+        this.demLayer.styleVariables_ = this.renderVariables;  // TODO: delete shim once OL supports this
         this.demLayer.setStyle({
           color: this.renderStyle,
           variables: this.renderVariables,
