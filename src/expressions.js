@@ -1,25 +1,12 @@
-const grey = ['band', 1];
-
 function normalize(value, varMin, varMax) {
   return ['/', ['-', value, ['var', varMin]], ['-', ['var', varMax], ['var', varMin]]];
 }
 
-function elevation(xOffset, yOffset) {
-  return ['band', 1, xOffset, yOffset];
-}
-
-function translateColormap(colorramp) {
-  const step = 1 / (colorramp.length);
-  const out = [];
-  out.push(0);
-  out.push([0, 0, 0, 0]);
-  for (let i = 0; i < colorramp.length; ++i) {
-    out.push(i * step);
-    out.push(colorramp[i]);
+function elevation(xOffset = 0, yOffset = 0) {
+  if (xOffset === 0 && yOffset === 0) {
+    return ['band', 1];
   }
-  out.push(1);
-  out.push([0, 0, 0, 0]);
-  return out;
+  return ['band', 1, xOffset, yOffset];
 }
 
 // hack as long as there is no binding to the built-in shader function floor
@@ -37,29 +24,40 @@ function contspace(v, varOffset, varSpacing) {
 
 export function contours(colorramp, nodata, varOffset = 'offset', varSpacing = 'spacing', varMin = 'min', varMax = 'max') {
   return [
-    'interpolate',
-    ['linear'],
+    'case',
+    // value between min/max
+    ['between', elevation(), ['var', varMin], ['var', varMax]],
     [
-      '*',
+      'palette',
       [
-        'clamp',
+        '*',
         [
-          '+',
-          diff(
-            contspace(['band', 1], varOffset, varSpacing),
-            contspace(elevation(1, 0), varOffset, varSpacing)
-          ),
-          diff(
-            contspace(['band', 1], varOffset, varSpacing),
-            contspace(elevation(0, 1), varOffset, varSpacing)
-          ),
+          '*',
+          [
+            'clamp',
+            [
+              '+',
+              diff(
+                contspace(elevation(), varOffset, varSpacing),
+                contspace(elevation(1, 0), varOffset, varSpacing)
+              ),
+              diff(
+                contspace(elevation(), varOffset, varSpacing),
+                contspace(elevation(0, 1), varOffset, varSpacing)
+              ),
+            ],
+            0,
+            1,
+          ],
+          normalize(elevation(), varMin, varMax),
         ],
-        0,
-        1,
+        colorramp.length + 1
       ],
-      normalize(grey, varMin, varMax),
+      // add a transparent color in the 0 index so that all 0s map to it
+      [[0, 0, 0, 0], ...colorramp]
     ],
-    ...translateColormap(colorramp)
+    // out of bounds color
+    ['color', 0, 0, 0, 0],
   ];
 }
 
@@ -87,15 +85,24 @@ export function relief(nodata, varVerticalExaggeration = 'vert', varSunElevation
     ['*', 255, cosIncidence],
     ['*', 255, cosIncidence],
     ['*', 255, cosIncidence],
-    ['match', grey, 0, 0, 1],
+    ['match', elevation(), 0, 0, 1],
   ];
 }
 
 export function shaded(colorramp, nodata, varMin = 'min', varMax = 'max') {
   return [
-    'interpolate',
-    ['linear'],
-    normalize(grey, varMin, varMax),
-    ...translateColormap(colorramp)
+    'case',
+    // value between min/max
+    ['between', elevation(), ['var', varMin], ['var', varMax]],
+    [
+      'palette',
+      ['*',
+        normalize(elevation(), varMin, varMax),
+        colorramp.length
+      ],
+      colorramp
+    ],
+    // out of bounds color
+    ['color', 0, 0, 0, 0],
   ];
 }
