@@ -22,7 +22,6 @@ import { contours, relief, shaded } from "../expressions";
 export default {
   props: {
     variables: Object,
-    tiffUrl: String,
   },
   async mounted() {
     await this.initiateMap();
@@ -89,35 +88,48 @@ export default {
     renderVariables(vars) {
       this.demLayer.updateStyleVariables(vars);
     },
+    "variables.tiffUrl"(url) {
+      this.resetDemLayer();
+    }
   },
   methods: {
-    resetDemSource() {
-      this.demSource = new GeoTIFF({
+    createDemSource(url) {
+      if (!url) {
+        return null;
+      }
+
+      const source = new GeoTIFF({
         normalize: false,
         sources: [
           {
-            url: this.tiffUrl,
+            url: url,
             nodata: -9999,
           },
         ],
       });
-      this.demSource.setAttributions("European Environment Agency (EAA)");
-      if (this.demLayer) {
-        this.demLayer.setSource(this.demSource);
-      }
+      source.setAttributions("European Environment Agency (EAA)");
+      return source;
     },
-    resetDemLayer() {
-      if (this.demLayer) {
-        this.map.removeLayer(this.demLayer);
+    async resetDemLayer() {
+      const source = this.createDemSource(this.variables.tiffUrl);
+      if (!this.demLayer) {
+        this.demLayer = new WebGLTileLayer({
+          source: source,
+          style: {
+            variables: this.renderVariables,
+            color: this.renderStyle,
+          },
+        });
+        this.map.addLayer(this.demLayer);
+      } else {
+        this.demLayer.setSource(source);
       }
-      this.demLayer = new WebGLTileLayer({
-        source: this.source,
-        style: {
-          variables: this.renderVariables,
-          color: this.renderStyle,
-        },
-      });
-      this.map.addLayer(this.demLayer);
+
+      // zoom Map to new Layer if it exists
+      if (source !== null) {
+        const view = await source.getView();
+        this.map.getView().fit(view.extent);
+      }
     },
     async initiateMap() {
       const response = await fetch(
@@ -139,28 +151,11 @@ export default {
         }),
       });
 
-      this.source = new GeoTIFF({
-        normalize: false,
-        sources: [
-          {
-            url: this.tiffUrl,
-            nodata: -9999,
-          },
-        ],
-      });
-      this.source.setAttributions("European Environment Agency (EAA)");
-      // const attribution = new Attribution({
-      //   collapsible: false,
-      // });
       this.map = new Map({
         target: this.$refs.map,
-        controls: defaultControls({ attribution: true }), //.extend([attribution]),
+        controls: defaultControls({ attribution: true }),
         layers: [
           raster,
-          // this.demLayer,
-          // colorLayer,
-          // reliefLayer,
-          // contoursLayer
         ],
         view: new View({
           projection: "EPSG:4326",
@@ -169,8 +164,6 @@ export default {
         }),
       });
 
-      const view = await this.source.getView();
-      this.map.getView().fit(view.extent);
       this.resetDemLayer();
     },
   },

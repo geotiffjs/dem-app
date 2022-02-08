@@ -1,5 +1,5 @@
 <template>
-  <Map :variables="variables" :tiffUrl="tiffUrl">
+  <Map :variables="variables">
     <aside id="dem-control">
       <div class="ol-control" style="top: 0; right: 0">
         <button
@@ -16,7 +16,6 @@
       <DemControl
         v-if="showControls"
         :variables="variables"
-        :tiffUrl="tiffUrl"
       ></DemControl>
       <button
         v-if="showControls"
@@ -44,8 +43,8 @@ export default {
   },
   data() {
     return {
-      tiffUrl: "./src/assets/Copernicus_DSM_30_N03_00_E016_00_DEM.tif",
       variables: {
+        tiffUrl: import.meta.env.VITE_INITIAL_URL || window.location.hash.substring(1),
         visualization: "shaded",
         colorscale: "jet",
         min: 360,

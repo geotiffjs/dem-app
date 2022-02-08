@@ -12,6 +12,7 @@ jobs:
         with:
           cache: 'yarn'
       - run: yarn install
+      - run: echo "VITE_INITIAL_URL=./src/assets/Copernicus_DSM_30_N03_00_E016_00_DEM.tif" > .env
       - run: yarn build
       - run: mkdir -p dist/src/assets
       - run: cp src/assets/*.tif dist/src/assets

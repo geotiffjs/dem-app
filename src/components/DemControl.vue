@@ -3,7 +3,7 @@
     <legend>Visualization Settings</legend>
       <div class="mui-textfield">
         <label>URL</label>
-        <input v-model="tiffUrl" type="text" />
+        <input v-model="variables.tiffUrl" type="text" />
       </div>
     <div class="mui-select">
       <select v-model="variables.visualization">
